@@ -145,7 +145,7 @@ public sealed class NavmeshManager : IDisposable
             throw new InvalidOperationException($"Can't build bitmap - navmesh creation is in progress");
 
         var startPoly = Query.FindNearestMeshPoly(startingPos);
-        var reachablePolys = Query.FindReachableMeshPolys(startPoly);
+        var reachablePolys = Query.FindReachableMeshPolys(startPoly, Service.ClientState.LocalPlayer.Position, 10.0f);
 
         Vector3 min = new(1024), max = new(-1024);
         foreach (var p in reachablePolys)

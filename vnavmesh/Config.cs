@@ -2,8 +2,27 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Navmesh;
+
+public class DeadZone
+{
+    public float X;
+    public float Y;
+    public float Z;
+    public float Radius;
+
+    public DeadZone() { }
+
+    public DeadZone(float x, float y, float z, float radius)
+    {
+        X = x;
+        Y = y;
+        Z = z;
+        Radius = radius;
+    }
+}
 
 public class Config
 {
@@ -15,6 +34,9 @@ public class Config
     public bool ShowWaypoints;
     public bool ForceShowGameCollision;
     public bool CancelMoveOnUserInput;
+
+    // Dead zones per zone ID (each zone ID maps to a list of dead zone definitions)
+    public Dictionary<ushort, List<DeadZone>> DeadZones = new();
 
     public event Action? Modified;
 
@@ -86,6 +108,7 @@ public class Config
 
     private static JObject ConvertConfig(JObject payload, int version)
     {
+        // No conversion needed for current version
         return payload;
     }
 }
