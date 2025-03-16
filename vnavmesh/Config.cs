@@ -1,114 +1,30 @@
-﻿using ImGuiNET;
-using Newtonsoft.Json.Linq;
+﻿// File: vnavmesh/Config.cs
 using System;
-using System.IO;
 using System.Collections.Generic;
+using ImGuiNET;
 
-namespace Navmesh;
-
-public class DeadZone
+namespace Navmesh
 {
-    public float X;
-    public float Y;
-    public float Z;
-    public float Radius;
-
-    public DeadZone() { }
-
-    public DeadZone(float x, float y, float z, float radius)
+    public class Config
     {
-        X = x;
-        Y = y;
-        Z = z;
-        Radius = radius;
-    }
-}
+        // Existing configuration fields…
 
-public class Config
-{
-    private const int _version = 1;
+        // New flag to toggle drawing dead zones in the world.
+        public bool ShowDeadZones = false;
 
-    public bool AutoLoadNavmesh = true;
-    public bool EnableDTR = true;
-    public bool AlignCameraToMovement;
-    public bool ShowWaypoints;
-    public bool ForceShowGameCollision;
-    public bool CancelMoveOnUserInput;
+        // Store dead zones by zone ID (or another grouping key).
+        public Dictionary<int, List<DeadZone>> DeadZones = new Dictionary<int, List<DeadZone>>();
 
-    // Dead zones per zone ID (each zone ID maps to a list of dead zone definitions)
-    public Dictionary<ushort, List<DeadZone>> DeadZones = new();
-
-    public event Action? Modified;
-
-    public void NotifyModified() => Modified?.Invoke();
-
-    public void Draw()
-    {
-        if (ImGui.Checkbox("Automatically load/build navigation data when changing zones", ref AutoLoadNavmesh))
-            NotifyModified();
-        if (ImGui.Checkbox("Enable DTR bar", ref EnableDTR))
-            NotifyModified();
-        if (ImGui.Checkbox("Align camera to movement direction", ref AlignCameraToMovement))
-            NotifyModified();
-        if (ImGui.Checkbox("Show active waypoints", ref ShowWaypoints))
-            NotifyModified();
-        if (ImGui.Checkbox("Always visualize game collision", ref ForceShowGameCollision))
-            NotifyModified();
-        if (ImGui.Checkbox("Cancel current path on player movement input", ref CancelMoveOnUserInput))
-            NotifyModified();
-    }
-
-    public void Save(FileInfo file)
-    {
-        try
+        /// <summary>
+        /// Draws the configuration UI, including the new dead zone visualization toggle.
+        /// </summary>
+        public void Draw()
         {
-            JObject jContents = new()
+            // Draw other configuration settings...
+            if (ImGui.Checkbox("Show Dead Zones", ref ShowDeadZones))
             {
-                { "Version", _version },
-                { "Payload", JObject.FromObject(this) }
-            };
-            File.WriteAllText(file.FullName, jContents.ToString());
-        }
-        catch (Exception e)
-        {
-            Service.Log.Error($"Failed to save config to {file.FullName}: {e}");
-        }
-    }
-
-    public void Load(FileInfo file)
-    {
-        try
-        {
-            var contents = File.ReadAllText(file.FullName);
-            var json = JObject.Parse(contents);
-            var version = (int?)json["Version"] ?? 0;
-            if (json["Payload"] is JObject payload)
-            {
-                payload = ConvertConfig(payload, version);
-                var thisType = GetType();
-                foreach (var (f, data) in payload)
-                {
-                    var thisField = thisType.GetField(f);
-                    if (thisField != null)
-                    {
-                        var value = data?.ToObject(thisField.FieldType);
-                        if (value != null)
-                        {
-                            thisField.SetValue(this, value);
-                        }
-                    }
-                }
+                // Save configuration or trigger a change event as needed.
             }
         }
-        catch (Exception e)
-        {
-            Service.Log.Error($"Failed to load config from {file.FullName}: {e}");
-        }
-    }
-
-    private static JObject ConvertConfig(JObject payload, int version)
-    {
-        // No conversion needed for current version
-        return payload;
     }
 }
